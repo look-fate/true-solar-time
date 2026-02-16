@@ -1,0 +1,38 @@
+{
+  "name": "true-solar-time",
+  "version": "1.0.0",
+  "description": "基于 Jean Meeus 天文算法的真太阳时计算库，通过均时差 + 经度修正将北京标准时转换为真太阳时",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run test && npm run build"
+  },
+  "keywords": [
+    "solar-time",
+    "true-solar-time",
+    "equation-of-time",
+    "astronomy",
+    "bazi"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
