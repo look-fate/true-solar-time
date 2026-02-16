@@ -1,6 +1,16 @@
 # true-solar-time
 
-基于 Jean Meeus 天文算法的真太阳时计算库。通过均时差（Equation of Time）+ 经度修正，将标准时转换为当地真太阳时（默认按北京时间标准经线 120°E）。
+基于 Jean Meeus 天文算法的真太阳时计算库。  
+通过“均时差（Equation of Time）+ 经度修正”，将标准时换算为当地真太阳时。
+
+- 默认标准经线：`120°E`（UTC+8，北京时间）
+- 适用于任意经度，支持自定义标准经线（如 UTC 的 `0°`）
+
+## 适用场景
+
+- 需要把标准时换算为地方真太阳时
+- 八字、历法、天文教育等需要“真太阳时校正”的场景
+- 需要拆分查看均时差与经度修正量
 
 ## 安装
 
@@ -8,77 +18,108 @@
 npm install true-solar-time
 ```
 
-## 使用
+## 快速开始
 
 ```ts
-import { getTrueSolarTime, getTrueSolarTimeDetail, getEquationOfTime } from 'true-solar-time'
+import {
+  getEquationOfTime,
+  getTrueSolarTime,
+  getTrueSolarTimeDetail,
+} from "true-solar-time";
 
-// 北京时间 2024-01-01 12:00，上海经度 121.47°E
-const date = new Date('2024-01-01T04:00:00Z') // UTC 时间
+// 示例：北京时间 2026-02-16 15:00:00，地点上海（121.47°E）
+// 注意这里带上 +08:00，避免时区歧义
+const input = new Date("2026-02-16T15:00:00+08:00");
 
-// 简单用法：直接获取真太阳时
-const solarTime = getTrueSolarTime(date, 121.47)
-console.log(solarTime) // 2024-01-01T04:02:56.098Z
+// 1) 直接获取真太阳时
+const solarTime = getTrueSolarTime(input, 121.47);
+console.log(solarTime.toISOString());
 
-// 详细结果：包含各项偏移量
-const detail = getTrueSolarTimeDetail(date, 121.47)
-console.log(detail)
+// 2) 获取详细偏移量
+const detail = getTrueSolarTimeDetail(input, 121.47);
+console.log(detail);
 // {
-//   date: 2024-01-01T04:02:56.098Z,
-//   eot: -2.95,        // 均时差（分钟）
-//   lngOffset: 5.88,   // 经度时差（分钟）
-//   totalOffset: 2.93  // 总偏移（分钟）
+//   date: Date,        // 真太阳时
+//   eot: number,       // 均时差（分钟）
+//   lngOffset: number, // 经度修正（分钟）
+//   totalOffset: number // 总偏移（分钟）= eot + lngOffset
 // }
 
-// 单独获取均时差
-const eot = getEquationOfTime(date)
-console.log(eot) // -2.95（分钟）
-
-// 非北京时间输入：可指定标准经线（例如 UTC 使用 0°）
-const utcDetail = getTrueSolarTimeDetail(date, 0, { standardLongitude: 0 })
-console.log(utcDetail.lngOffset) // 0
+// 3) 单独获取均时差（分钟）
+const eot = getEquationOfTime(input);
+console.log(eot);
 ```
 
-## API
+## API 概览
+
+| 函数 | 返回值 | 说明 |
+|------|--------|------|
+| `getTrueSolarTime(date, longitude, options?)` | `Date` | 返回真太阳时 |
+| `getTrueSolarTimeDetail(date, longitude, options?)` | `TrueSolarTimeResult` | 返回真太阳时 + 偏移拆分 |
+| `getEquationOfTime(date)` | `number` | 返回均时差（分钟） |
+
+## API 详情
 
 ### `getTrueSolarTime(date: Date, longitude: number, options?: TrueSolarTimeOptions): Date`
 
-计算真太阳时，返回 Date 对象。
+计算真太阳时并返回 `Date` 对象。
 
-- `date` — 输入时间（Date 对象，内部使用 UTC 分量计算）
-- `longitude` — 当地经度，东经为正（如上海 121.47，成都 104.07）
-- `options.standardLongitude` — 输入时间所属时区标准经线（默认 `120`）
+- `date`: 输入时刻（`Date`）
+- `longitude`: 当地经度（东经为正，西经为负）
+- `options.standardLongitude`: 输入时间所属时区的标准经线，默认 `120`
 
 ### `getTrueSolarTimeDetail(date: Date, longitude: number, options?: TrueSolarTimeOptions): TrueSolarTimeResult`
 
-计算真太阳时，返回包含各项偏移量的详细结果。
+计算真太阳时并返回偏移拆分结果。
 
 ```ts
 interface TrueSolarTimeResult {
-  date: Date        // 真太阳时
-  eot: number       // 均时差（分钟）
-  lngOffset: number // 经度时差（分钟）
-  totalOffset: number // 总偏移（分钟）
-}
-
-interface TrueSolarTimeOptions {
-  standardLongitude?: number // 输入时间所属时区标准经线（度）
+  date: Date;        // 真太阳时
+  eot: number;       // 均时差（分钟）
+  lngOffset: number; // 经度修正（分钟）
+  totalOffset: number; // 总偏移（分钟）
 }
 ```
 
 ### `getEquationOfTime(date: Date): number`
 
-计算均时差（Equation of Time），返回值单位为分钟。正值表示真太阳时快于平太阳时。
+计算均时差（分钟）。  
+返回值为正，表示真太阳时快于平太阳时。
 
-## 原理
+### `TrueSolarTimeOptions`
 
+```ts
+interface TrueSolarTimeOptions {
+  standardLongitude?: number; // 标准经线（度）
+}
 ```
+
+## 时区与输入说明
+
+`Date` 在 JS 中表示绝对时间戳，不存储“北京时间/本地时间”标签。  
+建议始终使用带时区偏移的 ISO 字符串或 `Date.UTC(...)` 构造输入：
+
+- 推荐：`new Date("2026-02-16T15:00:00+08:00")`
+- 推荐：`new Date(Date.UTC(2026, 1, 16, 7, 0, 0))`
+- 谨慎：`new Date("2026-02-16 15:00:00")`（运行环境解析可能不一致）
+
+## 计算原理
+
+```text
 真太阳时 = 标准时 + 经度修正 + 均时差
 ```
 
-- 经度修正 = (当地经度 - 标准经线) × 4 分钟/度
-- 均时差由太阳赤经与平太阳经度之差计算，基于儒略日和太阳轨道参数
-- 默认标准经线为 120°E（北京时间），可通过 `options.standardLongitude` 覆盖
+- 经度修正：`(当地经度 - 标准经线) × 4 分钟/度`
+- 均时差：由太阳赤经与平太阳经度差计算，基于儒略日与太阳轨道参数
+- 默认标准经线：`120°E`（可通过 `standardLongitude` 覆盖）
+
+## 输入校验
+
+以下情况会抛出错误：
+
+- `date` 不是有效 `Date`：抛 `TypeError`
+- `longitude` 或 `standardLongitude` 不是有限数字：抛 `TypeError`
+- `longitude` 或 `standardLongitude` 超出 `[-180, 180]`：抛 `RangeError`
 
 ## 常用城市经度参考
 
@@ -92,13 +133,19 @@ interface TrueSolarTimeOptions {
 | 哈尔滨 | 126.63 |
 | 乌鲁木齐 | 87.62 |
 
-## 开发
+## 精度与边界
+
+- 本库面向工程与应用层换算场景
+- 结果通常可满足分钟级、秒级时间校正需求
+- 若用于天文观测或法律计时等高精度场景，请结合权威天文历表复核
+
+## 本地开发
 
 ```bash
-npm run build   # 构建（ESM + CJS 双输出）
-npm test        # 运行测试
-npm run typecheck # TS 类型检查
-npm run check   # typecheck + test + build
+npm run typecheck
+npm test
+npm run build
+npm run check
 ```
 
 ## License
