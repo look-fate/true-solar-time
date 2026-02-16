@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
+  CHINA_REGIONS,
+  findRegionByCode,
   getEquationOfTime,
+  getChinaRegions,
+  getRegionOptions,
   getTrueSolarTime,
   getTrueSolarTimeDetail,
 } from "../src/index";
@@ -121,5 +125,43 @@ describe("输入校验", () => {
     expect(() =>
       getTrueSolarTimeDetail(date, 120, { standardLongitude: -200 }),
     ).toThrow(RangeError);
+  });
+});
+
+describe("地区数据导出", () => {
+  it("导出数据包含北京并带有经度", () => {
+    const beijing = CHINA_REGIONS.find((item) => item.code === "CN-BJ-BEIJING");
+    expect(beijing).toBeDefined();
+    expect(beijing?.longitude).toBeCloseTo(116.4, 1);
+  });
+
+  it("getChinaRegions 返回可修改副本，不影响原始常量", () => {
+    const regions = getChinaRegions();
+    expect(regions.length).toBe(CHINA_REGIONS.length);
+
+    const first = regions[0];
+    expect(first).toBeDefined();
+    if (!first) return;
+
+    first.city = "测试城市";
+    expect(CHINA_REGIONS[0]?.city).not.toBe("测试城市");
+  });
+
+  it("getRegionOptions 可直接给前端 Select 使用", () => {
+    const options = getRegionOptions();
+    const shanghai = options.find((item) => item.value === "CN-SH-SHANGHAI");
+
+    expect(shanghai).toEqual({
+      label: "上海",
+      value: "CN-SH-SHANGHAI",
+      longitude: 121.47,
+      standardLongitude: 120,
+    });
+  });
+
+  it("findRegionByCode 可按编码查询地区", () => {
+    const shenzhen = findRegionByCode("CN-GD-SHENZHEN");
+    expect(shenzhen?.city).toBe("深圳");
+    expect(shenzhen?.province).toBe("广东");
   });
 });

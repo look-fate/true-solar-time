@@ -22,7 +22,9 @@ npm install true-solar-time
 
 ```ts
 import {
+  getChinaRegions,
   getEquationOfTime,
+  getRegionOptions,
   getTrueSolarTime,
   getTrueSolarTimeDetail,
 } from "true-solar-time";
@@ -48,6 +50,33 @@ console.log(detail);
 // 3) 单独获取均时差（分钟）
 const eot = getEquationOfTime(input);
 console.log(eot);
+
+// 4) 导出地区数据（可直接给前端）
+const regionOptions = getRegionOptions();
+// [
+//   {
+//     label: "上海",
+//     value: "CN-SH-SHANGHAI",
+//     longitude: 121.47,
+//     standardLongitude: 120
+//   },
+//   ...
+// ]
+
+const regions = getChinaRegions();
+// [
+//   {
+//     code: "CN-BJ-BEIJING",
+//     country: "中国",
+//     province: "北京",
+//     city: "北京",
+//     name: "北京",
+//     longitude: 116.4,
+//     timezone: "Asia/Shanghai",
+//     standardLongitude: 120
+//   },
+//   ...
+// ]
 ```
 
 ## API 概览
@@ -57,6 +86,9 @@ console.log(eot);
 | `getTrueSolarTime(date, longitude, options?)` | `Date` | 返回真太阳时 |
 | `getTrueSolarTimeDetail(date, longitude, options?)` | `TrueSolarTimeResult` | 返回真太阳时 + 偏移拆分 |
 | `getEquationOfTime(date)` | `number` | 返回均时差（分钟） |
+| `getChinaRegions()` | `SolarRegion[]` | 返回中国地区列表（含经度） |
+| `getRegionOptions()` | `SolarRegionOption[]` | 返回前端 Select 可直接使用的选项 |
+| `findRegionByCode(code)` | `SolarRegion \| undefined` | 按地区编码查询 |
 
 ## API 详情
 
@@ -93,6 +125,28 @@ interface TrueSolarTimeOptions {
   standardLongitude?: number; // 标准经线（度）
 }
 ```
+
+### `getChinaRegions(): SolarRegion[]`
+
+返回中国常用地区数据（含省份、城市、经度、时区、标准经线）。  
+适合前端地区联动、后端参数校验或默认值回填。
+
+### `getRegionOptions(): SolarRegionOption[]`
+
+返回轻量化下拉选项：
+
+```ts
+interface SolarRegionOption {
+  label: string;
+  value: string;
+  longitude: number;
+  standardLongitude: number;
+}
+```
+
+### `findRegionByCode(code: string): SolarRegion | undefined`
+
+按地区编码查询单个地区，可用于回显与反查经度。
 
 ## 时区与输入说明
 
