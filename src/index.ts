@@ -1,7 +1,9 @@
 export {
   getEquationOfTime,
   getTrueSolarTime,
+  getTrueSolarTimeByRegionCode,
   getTrueSolarTimeDetail,
+  getTrueSolarTimeDetailByRegionCode,
 } from "./api";
 export type { TrueSolarTimeOptions, TrueSolarTimeResult } from "./types";
 export {

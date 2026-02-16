@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { runInNewContext } from "node:vm";
 import {
   CHINA_REGIONS,
   findRegionByCode,
@@ -6,7 +7,9 @@ import {
   getChinaRegions,
   getRegionOptions,
   getTrueSolarTime,
+  getTrueSolarTimeByRegionCode,
   getTrueSolarTimeDetail,
+  getTrueSolarTimeDetailByRegionCode,
 } from "../src/index";
 
 // 辅助：创建北京时间 Date（UTC+8）
@@ -51,6 +54,22 @@ describe("getEquationOfTime", () => {
     const eot = getEquationOfTime(date);
     expect(eot).toBeCloseTo(16.4, 0);
   });
+
+  it("支持跨 realm 的 Date 对象", () => {
+    const crossRealmDate = runInNewContext(
+      "new Date('2024-01-15T04:00:00.000Z')",
+    ) as Date;
+    const eot = getEquationOfTime(crossRealmDate);
+    expect(Number.isFinite(eot)).toBe(true);
+  });
+
+  it("历史日期（1582 年前）仍可计算", () => {
+    const date = new Date("1500-06-21T12:00:00.000Z");
+    const eot = getEquationOfTime(date);
+    expect(Number.isFinite(eot)).toBe(true);
+    // 均时差的合理物理范围大致在 ±20 分钟内
+    expect(Math.abs(eot)).toBeLessThan(20);
+  });
 });
 
 describe("getTrueSolarTime", () => {
@@ -88,6 +107,34 @@ describe("getTrueSolarTime", () => {
     const date = new Date(Date.UTC(2024, 6, 1, 12, 0, 0));
     const result = getTrueSolarTimeDetail(date, 0, { standardLongitude: 0 });
     expect(result.lngOffset).toBe(0);
+  });
+});
+
+describe("按地区编码计算真太阳时", () => {
+  it("getTrueSolarTimeByRegionCode 与经度接口结果一致", () => {
+    const date = bjTime(2024, 9, 1, 10, 15);
+    const byCode = getTrueSolarTimeByRegionCode(date, "CN-SH-SHANGHAI");
+    const byLon = getTrueSolarTime(date, 121.47, { standardLongitude: 120 });
+    expect(byCode.getTime()).toBe(byLon.getTime());
+  });
+
+  it("getTrueSolarTimeDetailByRegionCode 与经度接口结果一致", () => {
+    const date = bjTime(2024, 12, 1, 9, 0);
+    const byCode = getTrueSolarTimeDetailByRegionCode(date, "CN-BJ-BEIJING");
+    const byLon = getTrueSolarTimeDetail(date, 116.4, { standardLongitude: 120 });
+    expect(byCode).toEqual(byLon);
+  });
+
+  it("未知地区编码应抛出 RangeError", () => {
+    const date = bjTime(2024, 1, 1, 12);
+    expect(() => getTrueSolarTimeByRegionCode(date, "CN-XX-UNKNOWN")).toThrow(
+      RangeError,
+    );
+  });
+
+  it("空地区编码应抛出 TypeError", () => {
+    const date = bjTime(2024, 1, 1, 12);
+    expect(() => getTrueSolarTimeByRegionCode(date, "")).toThrow(TypeError);
   });
 });
 
@@ -163,5 +210,24 @@ describe("地区数据导出", () => {
     const shenzhen = findRegionByCode("CN-GD-SHENZHEN");
     expect(shenzhen?.city).toBe("深圳");
     expect(shenzhen?.province).toBe("广东");
+  });
+
+  it("CHINA_REGIONS 在运行时不可变", () => {
+    const before = CHINA_REGIONS[0];
+    expect(before).toBeDefined();
+    if (!before) return;
+
+    expect(Object.isFrozen(CHINA_REGIONS)).toBe(true);
+    expect(Object.isFrozen(before)).toBe(true);
+
+    expect(() => {
+      (CHINA_REGIONS as unknown as unknown[]).push({});
+    }).toThrow(TypeError);
+
+    expect(() => {
+      (before as { city: string }).city = "测试城市";
+    }).toThrow(TypeError);
+
+    expect(CHINA_REGIONS[0]?.city).not.toBe("测试城市");
   });
 });

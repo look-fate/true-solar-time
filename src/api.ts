@@ -1,7 +1,21 @@
 import { getEquationOfTimeByDate } from "./internal/astronomy";
 import { applyMinuteOffset, calculateOffsets } from "./internal/offset";
 import { assertValidDate } from "./internal/validation";
+import { findRegionByCode } from "./regions";
 import type { TrueSolarTimeOptions, TrueSolarTimeResult } from "./types";
+import type { SolarRegion } from "./regions";
+
+function resolveRegionByCode(regionCode: string): SolarRegion {
+  if (typeof regionCode !== "string" || regionCode.trim() === "") {
+    throw new TypeError("regionCode 必须是非空字符串");
+  }
+
+  const region = findRegionByCode(regionCode);
+  if (!region) {
+    throw new RangeError(`未找到地区编码: ${regionCode}`);
+  }
+  return region;
+}
 
 /**
  * 计算均时差（Equation of Time）
@@ -53,4 +67,36 @@ export function getTrueSolarTimeDetail(
     lngOffset,
     totalOffset,
   };
+}
+
+/**
+ * 按地区编码计算真太阳时
+ * @param date - 输入时刻（Date 对象）
+ * @param regionCode - 地区编码（如 CN-SH-SHANGHAI）
+ * @returns 真太阳时 Date 对象
+ */
+export function getTrueSolarTimeByRegionCode(
+  date: Date,
+  regionCode: string,
+): Date {
+  const region = resolveRegionByCode(regionCode);
+  return getTrueSolarTime(date, region.longitude, {
+    standardLongitude: region.standardLongitude,
+  });
+}
+
+/**
+ * 按地区编码计算真太阳时（详细结果）
+ * @param date - 输入时刻（Date 对象）
+ * @param regionCode - 地区编码（如 CN-SH-SHANGHAI）
+ * @returns 包含各项偏移量的详细结果
+ */
+export function getTrueSolarTimeDetailByRegionCode(
+  date: Date,
+  regionCode: string,
+): TrueSolarTimeResult {
+  const region = resolveRegionByCode(regionCode);
+  return getTrueSolarTimeDetail(date, region.longitude, {
+    standardLongitude: region.standardLongitude,
+  });
 }

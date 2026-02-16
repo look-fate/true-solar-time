@@ -109,8 +109,8 @@ function buildRegionName(province: string, city: string): string {
   return province === city ? city : `${province}·${city}`;
 }
 
-export const CHINA_REGIONS: readonly SolarRegion[] = CHINA_REGION_DATA.map(
-  (item) => ({
+const BUILT_CHINA_REGIONS = CHINA_REGION_DATA.map((item) =>
+  Object.freeze({
     code: item.code,
     country: CN_COUNTRY,
     province: item.province,
@@ -120,6 +120,14 @@ export const CHINA_REGIONS: readonly SolarRegion[] = CHINA_REGION_DATA.map(
     timezone: CN_TIMEZONE,
     standardLongitude: CN_STANDARD_LONGITUDE,
   }),
+);
+
+export const CHINA_REGIONS: readonly Readonly<SolarRegion>[] = Object.freeze(
+  BUILT_CHINA_REGIONS,
+);
+
+const CHINA_REGION_MAP: ReadonlyMap<string, Readonly<SolarRegion>> = new Map(
+  CHINA_REGIONS.map((region) => [region.code, region]),
 );
 
 /**
@@ -145,6 +153,6 @@ export function getRegionOptions(): SolarRegionOption[] {
  * 按地区编码查询
  */
 export function findRegionByCode(code: string): SolarRegion | undefined {
-  const region = CHINA_REGIONS.find((item) => item.code === code);
+  const region = CHINA_REGION_MAP.get(code);
   return region ? { ...region } : undefined;
 }

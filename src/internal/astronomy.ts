@@ -1,6 +1,8 @@
 import { COSEPS, SINEPS, TWO_PI } from "./constants";
 import { assertValidDate } from "./validation";
 
+const GREGORIAN_START_UTC = Date.UTC(1582, 9, 15, 0, 0, 0, 0);
+
 function fpart(x: number): number {
   x = x - Math.floor(x);
   if (x < 0) x += 1;
@@ -42,7 +44,8 @@ function toJulianDate(date: Date): number {
   }
 
   const A = Math.floor(year / 100);
-  const B = 2 - A + Math.floor(A / 4);
+  const B =
+    date.getTime() >= GREGORIAN_START_UTC ? 2 - A + Math.floor(A / 4) : 0;
   let jd =
     Math.floor(365.25 * (year + 4716)) +
     Math.floor(30.6001 * (month + 1)) +

@@ -26,7 +26,9 @@ import {
   getEquationOfTime,
   getRegionOptions,
   getTrueSolarTime,
+  getTrueSolarTimeByRegionCode,
   getTrueSolarTimeDetail,
+  getTrueSolarTimeDetailByRegionCode,
 } from "true-solar-time";
 
 // 示例：北京时间 2026-02-16 15:00:00，地点上海（121.47°E）
@@ -51,7 +53,15 @@ console.log(detail);
 const eot = getEquationOfTime(input);
 console.log(eot);
 
-// 4) 导出地区数据（可直接给前端）
+// 4) 直接按地区编码计算（无需手动传经度）
+const byCode = getTrueSolarTimeByRegionCode(input, "CN-SH-SHANGHAI");
+const byCodeDetail = getTrueSolarTimeDetailByRegionCode(
+  input,
+  "CN-SH-SHANGHAI",
+);
+console.log(byCode.toISOString(), byCodeDetail.totalOffset);
+
+// 5) 导出地区数据（可直接给前端）
 const regionOptions = getRegionOptions();
 // [
 //   {
@@ -85,6 +95,8 @@ const regions = getChinaRegions();
 |------|--------|------|
 | `getTrueSolarTime(date, longitude, options?)` | `Date` | 返回真太阳时 |
 | `getTrueSolarTimeDetail(date, longitude, options?)` | `TrueSolarTimeResult` | 返回真太阳时 + 偏移拆分 |
+| `getTrueSolarTimeByRegionCode(date, regionCode)` | `Date` | 按地区编码返回真太阳时 |
+| `getTrueSolarTimeDetailByRegionCode(date, regionCode)` | `TrueSolarTimeResult` | 按地区编码返回真太阳时 + 偏移拆分 |
 | `getEquationOfTime(date)` | `number` | 返回均时差（分钟） |
 | `getChinaRegions()` | `SolarRegion[]` | 返回中国地区列表（含经度） |
 | `getRegionOptions()` | `SolarRegionOption[]` | 返回前端 Select 可直接使用的选项 |
@@ -112,6 +124,21 @@ interface TrueSolarTimeResult {
   totalOffset: number; // 总偏移（分钟）
 }
 ```
+
+### `getTrueSolarTimeByRegionCode(date: Date, regionCode: string): Date`
+
+按地区编码计算真太阳时。
+
+- `date`: 输入时刻（`Date`）
+- `regionCode`: 地区编码（如 `CN-SH-SHANGHAI`）
+- 内部会自动使用该地区的经度与标准经线
+
+### `getTrueSolarTimeDetailByRegionCode(date: Date, regionCode: string): TrueSolarTimeResult`
+
+按地区编码计算真太阳时并返回偏移拆分。
+
+- 返回结构同 `TrueSolarTimeResult`
+- 适合业务层直接用地区编码进行换算
 
 ### `getEquationOfTime(date: Date): number`
 
@@ -174,6 +201,8 @@ interface SolarRegionOption {
 - `date` 不是有效 `Date`：抛 `TypeError`
 - `longitude` 或 `standardLongitude` 不是有限数字：抛 `TypeError`
 - `longitude` 或 `standardLongitude` 超出 `[-180, 180]`：抛 `RangeError`
+- `regionCode` 为空字符串：抛 `TypeError`
+- `regionCode` 不存在：抛 `RangeError`
 
 ## 常用城市经度参考
 
@@ -191,6 +220,7 @@ interface SolarRegionOption {
 
 - 本库面向工程与应用层换算场景
 - 结果通常可满足分钟级、秒级时间校正需求
+- 儒略日换算在 `1582-10-15`（含）之后使用格里高利历，在此前使用儒略历
 - 若用于天文观测或法律计时等高精度场景，请结合权威天文历表复核
 
 ## 本地开发
