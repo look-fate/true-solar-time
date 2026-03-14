@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.1 - 2026-03-14
+
+### Fixed
+- 移除了错误导入的非中国城市数据
+- 现在只包含 4063 个中国城市（之前错误包含了全球城市）
+
 ## 1.2.0 - 2026-03-14
 
 ### Added

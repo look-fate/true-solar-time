@@ -1,6 +1,6 @@
 {
   "name": "true-solar-time",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "基于 Jean Meeus 天文算法的真太阳时计算库，通过均时差 + 经度修正将北京标准时转换为真太阳时",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",

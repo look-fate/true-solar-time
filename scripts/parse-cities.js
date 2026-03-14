@@ -17,8 +17,11 @@ for (const line of lines) {
   if (parts.length < 4) continue;
 
   const [location, city, lon, lat] = parts;
-  const longitude = parseFloat(lon);
 
+  // 只保留中国的城市（简体或繁体）
+  if (!location.startsWith('中国') && !location.startsWith('中國')) continue;
+
+  const longitude = parseFloat(lon);
   if (isNaN(longitude)) continue;
 
   // 解析省份和城市
