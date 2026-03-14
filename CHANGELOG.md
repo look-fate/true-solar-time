@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.0 - 2026-03-14
+
+### Added
+- 扩展城市数据库从 46 个到 6884 个中国城市
+- 新增覆盖全国各省市县的完整经纬度数据
+- 数据来源于 moira_macOS 项目的完整城市数据库
+
+### Changed
+- 城市编码格式优化为 `CN-{省份缩写}-{序号}`
+- 保持所有 API 接口向后兼容
+
 ## 1.1.0 - 2026-02-16
 
 ### Added
